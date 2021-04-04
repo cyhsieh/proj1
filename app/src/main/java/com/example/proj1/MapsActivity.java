@@ -53,13 +53,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        Toast.makeText(this, "hello map", Toast.LENGTH_SHORT).show();
+        // Add a marker in EC and move the camera
+        LatLng ec = new LatLng(24.7869954, 120.997482);
+        mMap.addMarker(new MarkerOptions().position(ec).title("Marker in EC"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(ec));
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "require permission 0", Toast.LENGTH_SHORT).show();
             // TODO: Consider calling
             //    Activity#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -72,6 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location == null) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "require permission", Toast.LENGTH_SHORT).show();
                 // TODO: Consider calling
                 //    Activity#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -83,15 +86,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             if (location == null) {
-                Toast.makeText(this, "null", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "null location!", Toast.LENGTH_SHORT).show();
             } else{
+                Toast.makeText(this, "show place", Toast.LENGTH_SHORT).show();
                 MarkerOptions markerOpt = new MarkerOptions();
                 LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
                 markerOpt.position(mylocation);
                 markerOpt.title(" 現 在 位 置 ");
                 markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)); mMap.addMarker(markerOpt).showInfoWindow();
                 PolylineOptions polylineOpt = new PolylineOptions();
-                polylineOpt.add(mylocation); polylineOpt.add(sydney);
+                polylineOpt.add(mylocation); polylineOpt.add(ec);
                 polylineOpt.color(Color.BLUE);
 
                 Polyline polyline = mMap.addPolyline(polylineOpt);
