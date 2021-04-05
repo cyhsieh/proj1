@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -57,7 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in EC and move the camera
         LatLng ec = new LatLng(24.7869954, 120.997482);
         mMap.addMarker(new MarkerOptions().position(ec).title("Marker in EC"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(ec));
+
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -72,9 +73,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return;
         }
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Log.d("##",location.toString());
         if (location == null) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "require permission", Toast.LENGTH_SHORT).show();
+                Log.d("##","null location");
                 // TODO: Consider calling
                 //    Activity#requestPermissions
                 // here to request the missing permissions, and then overriding
@@ -87,20 +90,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             if (location == null) {
                 Toast.makeText(this, "null location!", Toast.LENGTH_SHORT).show();
-            } else{
-                Toast.makeText(this, "show place", Toast.LENGTH_SHORT).show();
-                MarkerOptions markerOpt = new MarkerOptions();
-                LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
-                markerOpt.position(mylocation);
-                markerOpt.title(" 現 在 位 置 ");
-                markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)); mMap.addMarker(markerOpt).showInfoWindow();
-                PolylineOptions polylineOpt = new PolylineOptions();
-                polylineOpt.add(mylocation); polylineOpt.add(ec);
-                polylineOpt.color(Color.BLUE);
-
-                Polyline polyline = mMap.addPolyline(polylineOpt);
-                polyline.setWidth(5);
             }
+        }else{
+            Toast.makeText(this, "show place", Toast.LENGTH_SHORT).show();
+            MarkerOptions markerOpt = new MarkerOptions();
+            LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
+            markerOpt.position(mylocation);
+            markerOpt.title(" 現 在 位 置 ");
+            markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)); mMap.addMarker(markerOpt).showInfoWindow();
+            PolylineOptions polylineOpt = new PolylineOptions();
+            polylineOpt.add(mylocation); polylineOpt.add(ec);
+            polylineOpt.color(Color.BLUE);
+
+            Polyline polyline = mMap.addPolyline(polylineOpt);
+            polyline.setWidth(5);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mylocation,9));
         }
     }
 }
