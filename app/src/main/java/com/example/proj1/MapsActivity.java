@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.Context;
@@ -16,6 +15,8 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,12 +36,13 @@ public class MapsActivity extends AppCompatActivity implements
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMyLocationClickListener,
         OnMapReadyCallback,
-        ActivityCompat.OnRequestPermissionsResultCallback {
+        ActivityCompat.OnRequestPermissionsResultCallback{
 
     private GoogleMap mMap;
     protected LocationManager locationManager;
     private boolean loc_gps;
     private boolean loc_network;
+    private LatLng oldpos;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private boolean permissionDenied = false;
@@ -55,6 +57,43 @@ public class MapsActivity extends AppCompatActivity implements
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        Button simuvibra = findViewById(R.id.btnSimuVibra);
+        simuvibra.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onClick(View v) {
+                Log.d("##", "simulator clicked");
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    enableMyLocation();
+                }
+                Location location = null;
+                if (loc_gps){
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                } else if (loc_network){
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+
+
+                if (location == null) {
+                    Log.d("##", "null location");
+                } else {
+                    Log.d("##",location.toString());
+                    MarkerOptions markerOpt = new MarkerOptions();
+                    final LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
+                    markerOpt.position(mylocation);
+                    markerOpt.title("偵測到路不平");
+                    markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)); mMap.addMarker(markerOpt).showInfoWindow();
+                    PolylineOptions polylineOpt = new PolylineOptions();
+                    polylineOpt.add(mylocation);
+                    polylineOpt.add(oldpos);
+                    polylineOpt.color(Color.BLUE);
+                    Polyline polyline = mMap.addPolyline(polylineOpt);
+                    polyline.setWidth(5);
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mylocation,9));
+                    oldpos = mylocation;
+                }
+            }
+        });
     }
 
 
@@ -78,6 +117,7 @@ public class MapsActivity extends AppCompatActivity implements
         Toast.makeText(this, "hello map", Toast.LENGTH_SHORT).show();
         // Add a marker in EC and move the camera
         final LatLng ec = new LatLng(24.7869954, 120.997482);
+        oldpos = ec;
         mMap.addMarker(new MarkerOptions().position(ec).title("初始位置"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ec,9));
 
@@ -117,7 +157,7 @@ public class MapsActivity extends AppCompatActivity implements
         Boolean initLocation = true;
 
         new Timer().scheduleAtFixedRate(new TimerTask(){
-            LatLng oldpos = ec;
+//            oldpos = ec;
             @Override
             public void run(){
                 runOnUiThread(new Runnable()
@@ -127,15 +167,7 @@ public class MapsActivity extends AppCompatActivity implements
                         Log.d("##", "A Kiss every 10 seconds");
 
                         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                            // TODO: Consider calling
-                            //    Activity#requestPermissions
-                            // here to request the missing permissions, and then overriding
-                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                            //                                          int[] grantResults)
-                            // to handle the case where the user grants the permission. See the documentation
-                            // for Activity#requestPermissions for more details.
                             enableMyLocation();
-//            return;
                         }
                         Location location = null;
                         if (loc_gps){
@@ -153,20 +185,16 @@ public class MapsActivity extends AppCompatActivity implements
                             MarkerOptions markerOpt = new MarkerOptions();
                             final LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
                             markerOpt.position(mylocation);
-                            markerOpt.title(" 現在位置");
+                            markerOpt.title("現在位置");
                             markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)); mMap.addMarker(markerOpt).showInfoWindow();
                             PolylineOptions polylineOpt = new PolylineOptions();
                             polylineOpt.add(mylocation);
                             polylineOpt.add(oldpos);
                             polylineOpt.color(Color.BLUE);
-
                             Polyline polyline = mMap.addPolyline(polylineOpt);
                             polyline.setWidth(5);
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mylocation,9));
                             oldpos = mylocation;
-
-
-
                         }
                     }
 
@@ -174,74 +202,11 @@ public class MapsActivity extends AppCompatActivity implements
 
 
             }
-        },0,10000);
-/*
-        Location location = null;
-        if (loc_gps){
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        } else if (loc_network){
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        }
-
-
-        if (location == null) {
-            Log.d("##", "null location");
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "require permission", Toast.LENGTH_SHORT).show();
-                Log.d("##","null location");
-                // TODO: Consider calling
-                //    Activity#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for Activity#requestPermissions for more details.
-                return;
-            }
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if (location == null) {
-                Toast.makeText(this, "null location!", Toast.LENGTH_SHORT).show();
-                Log.d("##","null location");
-            }
-        } else {
-            Log.d("##",location.toString());
-            Toast.makeText(this, "show place", Toast.LENGTH_SHORT).show();
-            MarkerOptions markerOpt = new MarkerOptions();
-            final LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
-            markerOpt.position(mylocation);
-            markerOpt.title(" 現 在 位 置 ");
-            markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW)); mMap.addMarker(markerOpt).showInfoWindow();
-            PolylineOptions polylineOpt = new PolylineOptions();
-            polylineOpt.add(mylocation); polylineOpt.add(ec);
-            polylineOpt.color(Color.BLUE);
-
-            Polyline polyline = mMap.addPolyline(polylineOpt);
-            polyline.setWidth(5);
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mylocation,9));
-
-            LatLng markLocation = new LatLng(location.getLatitude(), location.getLongitude());
-            // label per 10 secs
-
-        }*/
+        },0,30000);
 
 
     }
-/*
-    private Location getNowLocation(){
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (loc_gps){
-                try{
-                    return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                } catch{
 
-                }
-
-            }
-        } else{
-            return;
-        }
-
-    }*/
 
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
