@@ -77,7 +77,7 @@ public class MapsActivity extends AppCompatActivity implements
 
         Toast.makeText(this, "hello map", Toast.LENGTH_SHORT).show();
         // Add a marker in EC and move the camera
-        LatLng ec = new LatLng(24.7869954, 120.997482);
+        final LatLng ec = new LatLng(24.7869954, 120.997482);
         mMap.addMarker(new MarkerOptions().position(ec).title("初始位置"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ec,9));
 
@@ -114,9 +114,68 @@ public class MapsActivity extends AppCompatActivity implements
             Log.d("##", "gps location fail");
             loc_network = false;
         }
+        Boolean initLocation = true;
+
+        new Timer().scheduleAtFixedRate(new TimerTask(){
+            LatLng oldpos = ec;
+            @Override
+            public void run(){
+                runOnUiThread(new Runnable()
+                {
+                    public void run()
+                    {
+                        Log.d("##", "A Kiss every 10 seconds");
+
+                        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            // TODO: Consider calling
+                            //    Activity#requestPermissions
+                            // here to request the missing permissions, and then overriding
+                            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                            //                                          int[] grantResults)
+                            // to handle the case where the user grants the permission. See the documentation
+                            // for Activity#requestPermissions for more details.
+                            enableMyLocation();
+//            return;
+                        }
+                        Location location = null;
+                        if (loc_gps){
+                            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        } else if (loc_network){
+                            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        }
+
+
+                        if (location == null) {
+                            Log.d("##", "null location");
+                        } else {
+                            Log.d("##",location.toString());
+//                    Toast.makeText(this, "show place", Toast.LENGTH_SHORT).show();
+                            MarkerOptions markerOpt = new MarkerOptions();
+                            final LatLng mylocation = new LatLng(location.getLatitude(), location.getLongitude());
+                            markerOpt.position(mylocation);
+                            markerOpt.title(" 現在位置");
+                            markerOpt.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)); mMap.addMarker(markerOpt).showInfoWindow();
+                            PolylineOptions polylineOpt = new PolylineOptions();
+                            polylineOpt.add(mylocation);
+                            polylineOpt.add(oldpos);
+                            polylineOpt.color(Color.BLUE);
+
+                            Polyline polyline = mMap.addPolyline(polylineOpt);
+                            polyline.setWidth(5);
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mylocation,9));
+                            oldpos = mylocation;
 
 
 
+                        }
+                    }
+
+                });
+
+
+            }
+        },0,10000);
+/*
         Location location = null;
         if (loc_gps){
             location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -126,6 +185,7 @@ public class MapsActivity extends AppCompatActivity implements
 
 
         if (location == null) {
+            Log.d("##", "null location");
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "require permission", Toast.LENGTH_SHORT).show();
                 Log.d("##","null location");
@@ -143,7 +203,7 @@ public class MapsActivity extends AppCompatActivity implements
                 Toast.makeText(this, "null location!", Toast.LENGTH_SHORT).show();
                 Log.d("##","null location");
             }
-        }else{
+        } else {
             Log.d("##",location.toString());
             Toast.makeText(this, "show place", Toast.LENGTH_SHORT).show();
             MarkerOptions markerOpt = new MarkerOptions();
@@ -161,16 +221,8 @@ public class MapsActivity extends AppCompatActivity implements
 
             LatLng markLocation = new LatLng(location.getLatitude(), location.getLongitude());
             // label per 10 secs
-            new Timer().scheduleAtFixedRate(new TimerTask(){
-                @Override
-                public void run(){
-                    Log.d("##", "A Kiss every 10 seconds");
 
-
-
-                }
-            },0,10000);
-        }
+        }*/
 
 
     }
